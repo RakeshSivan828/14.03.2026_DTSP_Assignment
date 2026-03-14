@@ -113,57 +113,65 @@ clear;
 close;
 
 // Sampling parameters
-fs = 500;              // Sampling frequency (Hz)
-t = 0:1/fs:2;          // Time vector (2 seconds)
+fs = 500;                 // Sampling frequency
+t = 0:1/fs:2;             // Time vector
 
-// Generate ECG-like signal
+// ECG-like signal
 ecg = 1.2*sin(2*%pi*1.7*t) + 0.25*sin(2*%pi*20*t) + 0.1*rand(1,length(t));
 
-// FIR Filter Design
-N = 41;                 // Filter order
-fc = 10;                // Cutoff frequency (Hz)
-Wc = fc/(fs/2);         // Normalized cutoff
+// FIR Filter Design (Window Method)
+N = 41;                   // Filter length
+fc = 10;                  // Cutoff frequency
+alpha = (N-1)/2;
+Wc = 2*%pi*fc/fs;
 
-h = wfir("lp", N, Wc, "hm");   // Low pass FIR using Hamming window
+for n = 1:N
+    if (n == alpha+1)
+        hd(n) = Wc/%pi;
+    else
+        hd(n) = sin(Wc*(n-alpha-1))/(%pi*(n-alpha-1));
+    end
+end
 
-// Apply FIR Filter
-filtered = conv(ecg, h);
+// Hamming Window
+w = window('hm',N);
 
-// Adjust length after convolution
+// FIR coefficients
+h = hd .* w';
+
+// Filtering
+filtered = conv(ecg,h);
 filtered = filtered(1:length(ecg));
 
 // Decimation by factor 3
-decimation_factor = 3;
-decimated = filtered(1:decimation_factor:$);
+dec = 3;
+decimated = filtered(1:dec:$);
+t_dec = t(1:dec:$);
 
-// Time vectors
-t_dec = t(1:decimation_factor:$);
-
-// Plot signals
+// Plot
 subplot(3,1,1)
-plot(t, ecg)
-title("Original ECG-like Signal")
-xlabel("Time (s)")
-ylabel("Amplitude")
+plot(t,ecg)
+title("Original ECG Signal")
 
 subplot(3,1,2)
-plot(t, filtered)
-title("Filtered Signal (Low-pass FIR)")
-xlabel("Time (s)")
-ylabel("Amplitude")
+plot(t,filtered)
+title("Filtered Signal")
 
 subplot(3,1,3)
-plot(t_dec, decimated)
+plot(t_dec,decimated)
 title("Decimated Signal (Factor = 3)")
-xlabel("Time (s)")
-ylabel("Amplitude")
+
 ```
 # OUTPUT: 
 ### Task 1:
 
+<img src="https://img.sanishtech.com/u/d39ed3e349968569f78db79c39706bb9.png" alt="Screenshot 2026-03-14 091322" loading="lazy" style="max-width:100%;height:auto;">
+
+<img src="https://img.sanishtech.com/u/4fb0b08255a06f3d2ed0e0b9b8e2eb59.png" alt="Screenshot 2026-03-14 092207" width="1918" height="895" loading="lazy" style="max-width:100%;height:auto;">
 
 ### Task 2:
 
+<img src="https://img.sanishtech.com/u/a78605d0482d1252868381ed02053d28.png" alt="Screenshot 2026-03-14 092502" width="1919" height="903" loading="lazy" style="max-width:100%;height:auto;">
 
 # RESULT: 
 Thus we have obtained the output.
